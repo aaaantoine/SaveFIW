@@ -45,6 +45,7 @@ def visit(topicNum):
     url = urlTemplate.format(topicNum)
     text = getPage(url)
     topic.title, topic.subtitle = parsers.getTopicTitle(text)
+    topic.category = parsers.getTopicCategory(text)
     for e in scrapeEntries(topicNum, text=text):
         topic.entries.append(e)
     

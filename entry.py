@@ -21,4 +21,5 @@ class Topic:
         self.topicId = topicId
         self.title = None
         self.subtitle = None
+        self.category = None
         self.entries = []

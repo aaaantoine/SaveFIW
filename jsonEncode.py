@@ -19,7 +19,8 @@ class EntryEncoder(json.JSONEncoder):
                 'topicId': o.topicId,
                 'title': o.title,
                 'subtitle': o.subtitle,
-                'entries': o.entries
+                'entries': o.entries,
+                'category': o.category
             }
         elif isinstance(o, datetime.date):
             return o.isoformat()
