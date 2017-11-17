@@ -31,9 +31,10 @@ def scrapeEntries(topicNum, url=None, text=None):
     for entry in parsers.getEntriesRaw(text):
         yield parsers.buildEntryFromRaw(topicNum, entry)
     currentPage, pages = parsers.detectPages(text)
-    print()
-    print("Current page {}, {} additional pages found".format(
-        currentPage, len([p for p, _ in pages if p > currentPage])))
+    remainingPages = len([p for p, _ in pages if p > currentPage])
+    if remainingPages > 0:
+        print("Current page {}, {} additional pages found".format(
+            currentPage, remainingPages))
     for pageNum, pageUrl in pages:
         if pageNum == currentPage + 1:
             for entry in scrapeEntries(topicNum, pageUrl):
