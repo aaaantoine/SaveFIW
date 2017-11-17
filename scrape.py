@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import configparser
 import urllib.request
 import os
 
@@ -7,11 +8,14 @@ from entry import Topic, Entry
 import jsonEncode
 import parsers
 
-start=1
-stop=30000
-urlTemplate='http://z4.invisionfree.com/FIWII/index.php?showtopic={}'
-encoding='cp1252'
-outputFolder='data'
+config = configparser.ConfigParser()
+config.read('scrape.ini')
+c = config['DEFAULT']
+start=int(c['start'])
+stop=int(c['stop'])
+urlTemplate=c['urlTemplate']
+encoding=c['encoding']
+outputFolder=c['outputFolder']
 
 def getPage(url):
     print("Visiting {}".format(url))

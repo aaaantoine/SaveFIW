@@ -10,17 +10,23 @@ and save them as JSON files.
 
 ## Parameters
 
+Values are configured in scrape.ini
+
 *   `urlTemplate`: the URL representing a topic on the target forum.
 *   `start`: the first Topic ID to scrape
 *   `stop`: the last Topic ID to scrape.
     Should be greater than or equal to `start`.
+*   `encoding`: the encoding of the HTML page.
+    Right-click your page and View Page Info
+    to see what encoding your browser detects.
+    Refer to [Python documentation](https://docs.python.org/2.4/lib/standard-encodings.html)
+    for a better idea of what to put here.
 *   `outputFolder`: the folder where data files will be saved.
 
 ## Procedure
 
 The script visits the given `urlTemplate`
 using Topic IDs ranging from the given `start` to the given `stop`.
-Currently this is configured at the top of `scrape.py`.
 
 For each topic ID, the `urlTemplate` replaces the `{}` token with the topic ID.
 
