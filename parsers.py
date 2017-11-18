@@ -72,7 +72,20 @@ def parseTopicTitle(titleRaw):
 def getTopicTitle(rawEntry):
     titleRaw = getTopicTitleRaw(rawEntry)
     return (None, None) if titleRaw == None else parseTopicTitle(titleRaw)
-        
+
+def getTopicCategoryRaw(rawEntry):
+    lines = rawEntry.split('\n')
+    for line in lines:
+        if line.startswith("<div id='navstrip'"):
+            return line
+
+catRE = re.compile("<a href='.*?(c=\d+|showforum=\d+)'>([^<]*)</a>")
+def parseTopicCategory(categoryRaw):
+    return catRE.findall(categoryRaw)
+
+def getTopicCategory(rawEntry):
+    categoryRaw = getTopicCategoryRaw(rawEntry)
+    return None if categoryRaw == None else parseTopicCategory(categoryRaw)
 
 pageRE = re.compile("<a href='([^']*)'>([^<]*)</a>")
 def detectPages(html):
