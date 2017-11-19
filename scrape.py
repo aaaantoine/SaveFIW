@@ -60,10 +60,7 @@ def replaceTokens(val):
 def makeFileSafe(val):
     val = replaceTokens(val)
     SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    chars = []
-    for char in val:
-        chars.append(char if char in SAFE else "_")
-    return "".join(chars)
+    return "".join(c if c in SAFE else "_" for c in val)
 
 def topicFileName(topic):
     # maxlen chosen for title because topic ID of up to 5 chars, plus hyphen,
