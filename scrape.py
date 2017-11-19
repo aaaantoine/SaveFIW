@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import configparser
+import re
 import urllib.request
 import os
 
@@ -52,13 +53,30 @@ def visit(topicNum):
     
     return topic if len(topic.entries) > 0 else None
 
+tokenRE = re.compile("&#[0-9A-F]+;")
+def replaceTokens(val):
+    return tokenRE.sub("_", val)
+
+def makeFileSafe(val):
+    val = replaceTokens(val)
+    SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    return "".join(c if c in SAFE else "_" for c in val)
+
+def topicFileName(topic):
+    # maxlen chosen for title because topic ID of up to 5 chars, plus hyphen,
+    # plus '.json', and the goal is to keep the name under 80 chars.
+    maxlen = 68
+    return "{}-{}".format(
+        topic.topicId,
+        makeFileSafe(topic.title)[:maxlen])
+
 def main():
     for n in range(start, stop+1):
         topic = visit(n)
         if topic != None:
             jsonEncode.save(
                 topic,
-                os.path.join(outputFolder, str(n) + ".json")) 
+                os.path.join(outputFolder, topicFileName(topic) + ".json"))
 
 if __name__ == '__main__':
     main()
