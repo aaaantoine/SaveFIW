@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import configparser
-import re
-import urllib.request
 import os
+import re
+import sys
+import urllib.request
 
 from entry import Topic, Entry
 import jsonEncode
@@ -82,5 +83,9 @@ def main(config):
             jsonEncode.save(topic, jsonFile)
 
 if __name__ == '__main__':
-    config = Config('scrape.ini')
+    if "--help" in sys.argv or len(sys.argv) > 2:
+        print("Usage: scrape.py [CONFIGFILE.INI]", file=sys.stderr)
+        sys.exit(1)
+    cfgfile = sys.argv[1] if len(sys.argv) > 1 else 'scrape.ini'
+    config = Config(cfgfile)
     main(config)
