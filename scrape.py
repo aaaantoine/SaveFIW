@@ -9,25 +9,27 @@ from entry import Topic, Entry
 import jsonEncode
 import parsers
 
-config = configparser.ConfigParser()
-config.read('scrape.ini')
-c = config['DEFAULT']
-start=int(c['start'])
-stop=int(c['stop'])
-urlTemplate=c['urlTemplate']
-encoding=c['encoding']
-outputFolder=c['outputFolder']
+class Config:
+    def __init__(self, filename):
+        config = configparser.ConfigParser()
+        config.read(filename)
+        c = config['DEFAULT']
+        self.start = int(c['start'])
+        self.stop = int(c['stop'])
+        self.urlTemplate = c['urlTemplate']
+        self.encoding = c['encoding']
+        self.outputFolder = c['outputFolder']
 
-def getPage(url):
+def getPage(url, encoding):
     print("Visiting {}".format(url))
     with urllib.request.urlopen(url) as r:
         return r.read().decode(encoding, 'replace')
 
-def scrapeEntries(topicNum, url=None, text=None):
+def scrapeEntries(topicNum, config, url=None, text=None):
     if text == None:
         if url == None:
-            url = urlTemplate.format(topicNum)
-        text = getPage(url)
+            url = config.urlTemplate.format(topicNum)
+        text = getPage(url, config.encoding)
     
     for entry in parsers.getEntriesRaw(text):
         yield parsers.buildEntryFromRaw(topicNum, entry)
@@ -38,17 +40,17 @@ def scrapeEntries(topicNum, url=None, text=None):
             currentPage, remainingPages))
     for pageNum, pageUrl in pages:
         if pageNum == currentPage + 1:
-            for entry in scrapeEntries(topicNum, pageUrl):
+            for entry in scrapeEntries(topicNum, config, pageUrl):
                 yield entry
         
-def visit(topicNum):
+def visit(topicNum, config):
     topic = Topic(topicNum)
     print("Topic {}".format(topicNum))
-    url = urlTemplate.format(topicNum)
-    text = getPage(url)
+    url = config.urlTemplate.format(topicNum)
+    text = getPage(url, config.encoding)
     topic.title, topic.subtitle = parsers.getTopicTitle(text)
     topic.category = parsers.getTopicCategory(text)
-    for e in scrapeEntries(topicNum, text=text):
+    for e in scrapeEntries(topicNum, config, text=text):
         topic.entries.append(e)
     
     return topic if len(topic.entries) > 0 else None
@@ -70,13 +72,15 @@ def topicFileName(topic):
         topic.topicId,
         makeFileSafe(topic.title)[:maxlen])
 
-def main():
-    for n in range(start, stop+1):
-        topic = visit(n)
+def main(config):
+    for n in range(config.start, config.stop+1):
+        topic = visit(n, config)
         if topic != None:
-            jsonEncode.save(
-                topic,
-                os.path.join(outputFolder, topicFileName(topic) + ".json"))
+            jsonFile = os.path.join(
+                config.outputFolder,
+                topicFileName(topic) + ".json")
+            jsonEncode.save(topic, jsonFile)
 
 if __name__ == '__main__':
-    main()
+    config = Config('scrape.ini')
+    main(config)
