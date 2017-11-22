@@ -1,36 +1,26 @@
 #!/usr/bin/env python3
 
-import configparser
 import os
 import re
+import requests
 import sys
-import urllib.request
 
+from config import Config
 from entry import Topic, Entry
 import jsonEncode
+import login
 import parsers
 
-class Config:
-    def __init__(self, filename):
-        config = configparser.ConfigParser()
-        config.read(filename)
-        c = config['DEFAULT']
-        self.start = int(c['start'])
-        self.stop = int(c['stop'])
-        self.urlTemplate = c['urlTemplate']
-        self.encoding = c['encoding']
-        self.outputFolder = c['outputFolder']
-
-def getPage(url, encoding):
+def getPage(url, cookies):
     print("Visiting {}".format(url))
-    with urllib.request.urlopen(url) as r:
-        return r.read().decode(encoding, 'replace')
+    r = requests.get(url, cookies=cookies)
+    return r.text
 
-def scrapeEntries(topicNum, config, url=None, text=None):
+def scrapeEntries(topicNum, config, cookies, url=None, text=None):
     if text == None:
         if url == None:
             url = config.urlTemplate.format(topicNum)
-        text = getPage(url, config.encoding)
+        text = getPage(url, cookies)
     
     for entry in parsers.getEntriesRaw(text):
         yield parsers.buildEntryFromRaw(topicNum, entry)
@@ -41,17 +31,17 @@ def scrapeEntries(topicNum, config, url=None, text=None):
             currentPage, remainingPages))
     for pageNum, pageUrl in pages:
         if pageNum == currentPage + 1:
-            for entry in scrapeEntries(topicNum, config, pageUrl):
+            for entry in scrapeEntries(topicNum, config, cookies, pageUrl):
                 yield entry
         
-def visit(topicNum, config):
+def visit(topicNum, config, cookies):
     topic = Topic(topicNum)
     print("Topic {}".format(topicNum))
     url = config.urlTemplate.format(topicNum)
-    text = getPage(url, config.encoding)
+    text = getPage(url, cookies)
     topic.title, topic.subtitle = parsers.getTopicTitle(text)
     topic.category = parsers.getTopicCategory(text)
-    for e in scrapeEntries(topicNum, config, text=text):
+    for e in scrapeEntries(topicNum, config, cookies, text=text):
         topic.entries.append(e)
     
     return topic if len(topic.entries) > 0 else None
@@ -74,8 +64,15 @@ def topicFileName(topic):
         makeFileSafe(topic.title)[:maxlen])
 
 def main(config):
+    cookies = None
+    if config.loginUrl != None:
+        cookies = login.tryLogin(config.loginUrl)
+        if cookies == None:
+            print("Failed login.")
+            return
+
     for n in range(config.start, config.stop+1):
-        topic = visit(n, config)
+        topic = visit(n, config, cookies)
         if topic != None:
             jsonFile = os.path.join(
                 config.outputFolder,

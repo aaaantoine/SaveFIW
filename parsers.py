@@ -1,9 +1,35 @@
+"""
+Parsing library for Invision Free bulletin boards
+
+"""
+
 from html.parser import HTMLParser
 import re
 from entry import Entry
 
 def debug(text): pass #print(text)
 def info(text): print(text)
+
+def getLoginData(uname, pw):
+    return {
+        "act": "Login",
+        "CODE": "01",
+        "UserName": uname,
+        "PassWord": pw
+    }
+
+def getErrors(html):
+    errstart = '  <div class="tablepad"><span class=\'postcolor\'>'
+    errend = '</span></div>'
+    lines = html.split('\n')
+    findError = False
+    for line in lines:
+        if findError:
+            if line.startswith(errstart):
+                return line.replace(errstart, "").replace(errend, "")
+        elif '<div class="pformstrip">The following errors were found:</div>' in line:
+            findError = True
+    return None
 
 entryStart = '\t<!--Begin Msg Number '
 
