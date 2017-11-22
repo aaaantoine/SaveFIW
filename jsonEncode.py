@@ -29,4 +29,4 @@ class EntryEncoder(json.JSONEncoder):
     
 def save(entries, filename):
     with open(filename, 'w') as outfile:
-        json.dump(entries, outfile, cls=EntryEncoder)
+        json.dump(entries, outfile, cls=EntryEncoder, sort_keys=True)
