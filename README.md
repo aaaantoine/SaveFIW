@@ -20,6 +20,11 @@ You may also provide a different ini file as a command-line argument.
 *   `loginUrl`: *Optional.* The URL to use for logging in.
     If provided, you will be prompted for credentials before the scrape begins.
     Otherwise, scraping will be done without maintaining a session.
+    
+    You may desire logging in to archive posts that guests cannot see.
+    However, login may affect the forum rendering
+    in ways you might not have considered,
+    like different time zone, different character encodings, etc.
 *   `outputFolder`: the folder where data files will be saved.
 
 ## Procedure
