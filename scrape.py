@@ -11,16 +11,24 @@ import jsonEncode
 import login
 import parsers
 
-def getPage(url, cookies):
-    print("Visiting {}".format(url))
-    r = requests.get(url, cookies=cookies)
-    return r.text
+class Browser:
+    def __init__(self, cookies):
+        self.cookies = cookies
 
-def scrapeEntries(topicNum, config, cookies, url=None, text=None):
+    def getText(self, url):
+        r = requests.get(url, cookies=self.cookies)
+        self.cookies = r.cookies
+        return r.text
+
+def getPage(browser, url):
+    print("Visiting {}".format(url))
+    return browser.getText(url)
+
+def scrapeEntries(topicNum, config, browser, url=None, text=None):
     if text == None:
         if url == None:
             url = config.urlTemplate.format(topicNum)
-        text = getPage(url, cookies)
+        text = getPage(browser, url)
     
     for entry in parsers.getEntriesRaw(text):
         yield parsers.buildEntryFromRaw(topicNum, entry)
@@ -31,17 +39,17 @@ def scrapeEntries(topicNum, config, cookies, url=None, text=None):
             currentPage, remainingPages))
     for pageNum, pageUrl in pages:
         if pageNum == currentPage + 1:
-            for entry in scrapeEntries(topicNum, config, cookies, pageUrl):
+            for entry in scrapeEntries(topicNum, config, browser, pageUrl):
                 yield entry
         
-def visit(topicNum, config, cookies):
+def visit(topicNum, config, browser):
     topic = Topic(topicNum)
     print("Topic {}".format(topicNum))
     url = config.urlTemplate.format(topicNum)
-    text = getPage(url, cookies)
+    text = getPage(browser, url)
     topic.title, topic.subtitle = parsers.getTopicTitle(text)
     topic.category = parsers.getTopicCategory(text)
-    for e in scrapeEntries(topicNum, config, cookies, text=text):
+    for e in scrapeEntries(topicNum, config, browser, text=text):
         topic.entries.append(e)
     
     return topic if len(topic.entries) > 0 else None
@@ -70,9 +78,9 @@ def main(config):
         if cookies == None:
             print("Failed login.")
             return
-
+    browser = Browser(cookies)
     for n in range(config.start, config.stop+1):
-        topic = visit(n, config, cookies)
+        topic = visit(n, config, browser)
         if topic != None:
             jsonFile = os.path.join(
                 config.outputFolder,
